@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franch Express - Owner Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0d; --paper: #f5f0e8; --rust: #c94b2a; --border: #ccc5b5; --mid: #7a7060;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
+  body { background: var(--paper); color: var(--ink); padding: 40px 20px; }
+  
+  .header { max-width: 1200px; margin: 0 auto 30px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
+  .header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--ink); letter-spacing: 0.05em; }
+  .header h1 span { color: var(--rust); }
+  .stats { font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: 500; color: var(--rust); background: rgba(201,75,42,0.1); padding: 8px 16px; border-radius: 4px; }
+
+  .table-container { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; text-align: left; }
+  th { background: var(--ink); color: #fff; padding: 16px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; white-space: nowrap; }
+  td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--ink); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: #faf8f5; }
+  
+  .mono { font-family: 'DM Mono', monospace; font-size: 0.85rem; }
+  .badge { background: #d4eddf; color: #2a7a4b; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+  .price { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--rust); }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1><span>Franch</span> Express Live Dashboard</h1>
+    <div class="stats" id="orderCount">Loading total orders...</div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date</th>
+          <th>Sender</th>
+          <th>Receiver</th>
+          <th>Region</th>
+          <th>Type & Qty</th>
+          <th>Dist.</th>
+          <th>Total (COD)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="orderTableBody">
+        <tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--mid);">Fetching live orders from database...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  // Automatically fetch orders when the page loads
+  document.addEventListener("DOMContentLoaded", () => {
+    https://franch-express-backend-1.onrender.com
+      .then(response => response.json())
+      .then(orders => {
+        const tableBody = document.getElementById('orderTableBody');
+        const countDisplay = document.getElementById('orderCount');
+        
+        tableBody.innerHTML = ''; // Clear loading text
+        countDisplay.textContent = `Total Bookings: ${orders.length}`;
+
+        if (orders.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--mid);">No orders yet. Waiting for customers!</td></tr>';
+          return;
+        }
+
+        // Loop through the database data and create a row for each order
+        orders.forEach(order => {
+          const dateStr = order.bookingDate ? new Date(order.bookingDate).toLocaleDateString('en-IN') : 'Just now';
+          const qtyText = order.packageType === 'Document' ? `${order.quantityWeight} pkt` : `${order.quantityWeight} kg`;
+
+          const row = `
+            <tr>
+              <td class="mono">#${order.orderId}</td>
+              <td class="mono">${dateStr}</td>
+              <td><strong>${order.senderName}</strong><br><span class="mono">${order.senderPhone}</span></td>
+              <td><strong>${order.receiverName}</strong><br><span class="mono">${order.receiverPhone}</span></td>
+              <td>${order.region}</td>
+              <td>${order.packageType}<br><span class="mono">${qtyText}</span></td>
+              <td class="mono">${order.distanceKm} km</td>
+              <td class="price">₹${order.totalCost.toLocaleString('en-IN')}</td>
+              <td><span class="badge">${order.status}</span></td>
+            </tr>
+          `;
+          tableBody.insertAdjacentHTML('beforeend', row);
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('orderTableBody').innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--rust);">⚠️ Error connecting to server. Is IntelliJ running?</td></tr>';
+      });
+  });
+</script>
+
+</body>
+</html>
